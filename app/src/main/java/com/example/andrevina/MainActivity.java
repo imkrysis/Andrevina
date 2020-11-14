@@ -38,12 +38,12 @@ public class MainActivity extends AppCompatActivity {
 
     EditText editTextNickname;
 
-    public void restart() {
+    public void restart() { // Restablecemos las variables correspondientes para volver a iniciar la partida.
 
         randNum = (int) (Math.random() * 100 + 1);
         randNum = 7;
         attempts = 0;
-        startTime = System.currentTimeMillis();
+        startTime = System.currentTimeMillis(); // Guardamos la hora de inicio de la ronda
         endTime = 0;
         nickname = "";
     }
@@ -83,15 +83,16 @@ public class MainActivity extends AppCompatActivity {
                             toastText = "The number is bigger than " + userNum + ". You have made " + attempts + " attempts.";
 
                         } else {
-                            attempts++;
 
-                            endTime = System.currentTimeMillis();
+                            endTime = System.currentTimeMillis(); // Al acertar el numero guardamos la hora de final de la ronda.
+
+                            attempts++;
 
                             setGameTime();
 
                             toastText = "You guessed the number, it was " + randNum + ". You needed " + attempts + " attempts and " + timeInfo + " minutes/seconds.";
 
-                            showRankingDialog();
+                            showRankingDialog(); // Mostramos el dialogo de ranking, para que el usuario pueda registrar su puntuacion.
 
                         }
 
@@ -115,9 +116,11 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void setGameTime() {
+    public void setGameTime() { // Comparamos la hora de inicio y final para determinar el tiempo que ha tardado en acertar el numero.
 
-        gameTime = (int) (endTime - startTime) / 1000;
+        gameTime = (int) (endTime - startTime) / 1000; // Dividimos entre 1000 porque la hora viene dada en ms.
+
+        // Hacemos los calculos correspondientes para llevar la informacion a una String y poder mostrarsela al usuario visualmente.
 
         int seconds = gameTime % 60;
         int minutes = gameTime / 60;
@@ -138,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void setRankingDialog() {
+    public void setRankingDialog() { // Establecemos el dialogo de final de partida.
 
         adb = new AlertDialog.Builder(this);
 
@@ -159,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void showRankingDialog() {
+    public void showRankingDialog() {  // Mostramos el dialogo de final de partida.
 
         adRanking.show();
 
@@ -167,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
         positiveButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
 
-                if (!editTextNickname.getText().toString().equalsIgnoreCase("")) {
+                if (!editTextNickname.getText().toString().equalsIgnoreCase("")) { // Si el usuario escribe un nombre, lo almacenamos, cerramos el dialogo, y llamamos al intent de la camara.
 
                     nickname = editTextNickname.getText().toString();
 
@@ -175,7 +178,7 @@ public class MainActivity extends AppCompatActivity {
 
                     takePhoto();
 
-                } else {
+                } else { // Si el usuario no escribe ningun nombre, mostramos un toast informativo y mantenemos el dialogo abierto.
 
                     toastText = "Introduce a name.";
 
@@ -189,7 +192,7 @@ public class MainActivity extends AppCompatActivity {
 
         Button negativeButton = adRanking.getButton(AlertDialog.BUTTON_NEGATIVE);
         negativeButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
+            public void onClick(View v) { // Si el usuario no quiere guardar su puntuacion, hacemos un restart para que pueda volver a jugar y cerramos el dialogo.
 
                 restart();
 
@@ -200,21 +203,15 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void takePhoto() {
+    public void takePhoto() { // Hacemos un intent para sacar la foto.
 
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
         startActivityForResult(takePictureIntent, 1);
 
-//        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-//
-//            startActivityForResult(takePictureIntent, 1);
-//
-//        }
-
     }
 
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) { // Si el resultado del intent es positivo, almacenamos el bitmap y llamamos a la funcion con el intent para abrir el ranking.
 
         super.onActivityResult(requestCode, resultCode, intent);
         if (requestCode == 1 && resultCode == RESULT_OK) {
@@ -227,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void openRanking() {
+    public void openRanking() { // Creamos un bundle en el que metemos toda la informacion necesaria para registrar en el ranking, y lanzamos el intent con el dentro.
 
         Intent intent = new Intent(MainActivity.this, RankingActivity.class);
 
