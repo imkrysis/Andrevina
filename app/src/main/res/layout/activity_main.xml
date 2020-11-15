@@ -28,6 +28,13 @@
             android:layout_height="wrap_content"
             android:text="Check" />
 
+        <Button
+            android:id="@+id/buttonRanking"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="openRanking"
+            android:text="Ranking" />
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
