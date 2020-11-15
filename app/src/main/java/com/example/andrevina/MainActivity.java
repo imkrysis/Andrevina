@@ -3,9 +3,7 @@ package com.example.andrevina;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -15,14 +13,52 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import org.w3c.dom.DOMImplementation;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.Text;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.stream.Stream;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
 public class MainActivity extends AppCompatActivity {
+
+    final File filesDir = new File ("/data/user/0/com.example.pr21_capturaimatges/files");
+    final File photoDir = new File ("/data/user/0/com.example.pr21_capturaimatges/files/photos");
+    final File rankingFile = new File ("/data/user/0/com.example.pr21_capturaimatges/files/ranking.xml");
+    final String photoExt = ".jpeg";
+
+    File photoFile;
+
+    DocumentBuilderFactory dbf;
+    DocumentBuilder db;
+    DOMImplementation domi;
+    Document rankingDocument;
+    Transformer transformer;
+
+    ArrayList<Record> recordsList = new ArrayList<Record>();
 
     int randNum;
 
     int attempts;
     String nickname;
     int gameTime;
-    Bitmap photo;
+    Bitmap photoBitmap;
     String timeInfo;
 
     long startTime;
@@ -43,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
         randNum = (int) (Math.random() * 100 + 1);
         randNum = 7;
         attempts = 0;
-        startTime = System.currentTimeMillis(); // Guardamos la hora de inicio de la ronda
+        startTime = System.currentTimeMillis(); // Guardamos la hora de inicio de la ronda.
         endTime = 0;
         nickname = "";
     }
@@ -59,8 +95,19 @@ public class MainActivity extends AppCompatActivity {
         final EditText editTextNumber = findViewById(R.id.editTextNumber);
         final Button buttonCheck = findViewById(R.id.buttonCheck);
 
-        setRankingDialog();
+        try {
 
+            checkDir();
+            checkXML();
+            readRankingXML();
+
+        } catch (IOException e) {
+
+            e.printStackTrace();
+
+        }
+
+        setRankingDialog();
         restart();
 
         buttonCheck.setOnClickListener(new View.OnClickListener() {
@@ -113,6 +160,87 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+    }
+
+    public void checkDir() throws IOException {
+
+        if (!filesDir.exists()) {
+
+            filesDir.mkdir();
+
+            photoDir.mkdir();
+
+            return;
+
+        }
+
+        if (!photoDir.exists()) {
+
+            photoDir.mkdir();
+
+        }
+
+    }
+
+    public void checkXML() throws IOException {
+
+        try {
+
+            if (!rankingFile.exists()) {
+
+                dbf = DocumentBuilderFactory.newInstance();
+                db = dbf.newDocumentBuilder();
+                domi = db.getDOMImplementation();
+
+                rankingDocument = domi.createDocument(null, "ranking", null);
+                rankingDocument.setXmlVersion("1.0");
+
+                Source source = new DOMSource(rankingDocument);
+                Result result = new StreamResult(rankingFile);
+
+                transformer = TransformerFactory.newInstance().newTransformer();
+                transformer.transform(source, result);
+
+            }
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+        }
+
+    }
+
+    public void readRankingXML() {
+
+        try {
+
+            rankingDocument = db.parse(rankingFile);
+
+            NodeList recordsList = rankingDocument.getElementsByTagName("record");
+
+            for (int i = 0; i < recordsList.getLength(); i++) {
+
+                Node recordNode = recordsList.item(i);
+
+                NodeList recordDataNodes = recordNode.getChildNodes();
+
+                for (int j = 0; j < recordDataNodes.getLength(); j++) {
+
+                    Node recordDataNode = recordDataNodes.item(j);
+
+                    System.out.println("Propiedad: " + recordDataNode.getNodeName() + " Valor: " + recordDataNode.getTextContent());
+
+                }
+            }
+
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+        }
 
     }
 
@@ -217,8 +345,103 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == 1 && resultCode == RESULT_OK) {
 
             Bundle extras = intent.getExtras();
-            photo = (Bitmap) extras.get("data");
+            photoBitmap = (Bitmap) extras.get("data");
+
+            savePhoto();
+
+            recordsList.add(new Record(nickname, attempts, gameTime, photoBitmap, timeInfo));
+
+            writeRankingXML();
+
+            readRankingXML();
+
             openRanking();
+
+        }
+
+    }
+
+    public void savePhoto() { // Guardamos la foto en el archivo correspondiente, segun el nombre del usuario.
+
+        photoFile = new File(photoDir + "/" + nickname + photoExt);
+
+        try {
+
+            if (!photoFile.exists()) { // Si el archivo no existe, lo creamos.
+
+                photoFile.createNewFile();
+
+            }
+
+            FileOutputStream fos = new FileOutputStream(photoFile);
+
+            photoBitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+        }
+
+    }
+
+    public void writeRankingXML() {
+
+        try {
+
+            for (int i = 0; i < recordsList.size(); i++) {
+
+                Element elementRecord = rankingDocument.createElement("record");
+
+                Element elementNickname = rankingDocument.createElement("nickname");
+                Text textNickname = rankingDocument.createTextNode(recordsList.get(i).getNickname());
+
+                elementNickname.appendChild(textNickname);
+
+                Element elementAttempts = rankingDocument.createElement("attempts");
+                Text textAttempts = rankingDocument.createTextNode(String.valueOf(recordsList.get(i).getAttempts()));
+
+                elementAttempts.appendChild(textAttempts);
+
+                Element elementGameTime = rankingDocument.createElement("gametime");
+                Text textGameTime = rankingDocument.createTextNode(String.valueOf(recordsList.get(i).getGameTime()));
+
+                elementGameTime.appendChild(textGameTime);
+
+                Element elementPhotoBitmap = rankingDocument.createElement("photobitmap");
+                Text textPhotoBitmap = rankingDocument.createTextNode(photoDir + "/" + recordsList.get(i).getNickname() + photoExt);
+
+                elementPhotoBitmap.appendChild(textPhotoBitmap);
+
+                Element elementTimeInfo = rankingDocument.createElement("timeinfo");
+                Text textTimeInfo = rankingDocument.createTextNode(recordsList.get(i).getTimeInfo());
+
+                elementTimeInfo.appendChild(textTimeInfo);
+
+                elementRecord.appendChild(elementNickname);
+                elementRecord.appendChild(elementAttempts);
+                elementRecord.appendChild(elementGameTime);
+                elementRecord.appendChild(elementPhotoBitmap);
+                elementRecord.appendChild(elementTimeInfo);
+
+                rankingDocument.getDocumentElement().appendChild(elementRecord);
+
+            }
+
+            Source source = new DOMSource(rankingDocument);
+
+            Result result = new StreamResult(rankingFile);
+
+            Transformer transformer = TransformerFactory.newInstance().newTransformer();
+
+            transformer.transform(source, result);
+
+
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
 
         }
 
@@ -233,7 +456,7 @@ public class MainActivity extends AppCompatActivity {
         extras.putString("NICKNAME", nickname);
         extras.putInt("ATTEMPTS", attempts);
         extras.putInt("GAME_TIME", gameTime);
-        extras.putParcelable("PHOTO", photo);
+        extras.putParcelable("PHOTO", photoBitmap);
         extras.putString("TIME_INFO", timeInfo);
 
         intent.putExtras(extras);
