@@ -4,7 +4,7 @@ import android.graphics.Bitmap;
 
 import java.util.Comparator;
 
-public class Record implements Comparator<Record> {
+public class Record {
 
     String nickname;
     int attempts;
@@ -42,27 +42,27 @@ public class Record implements Comparator<Record> {
         return timeInfo;
     }
 
-    public int compare(Record record1, Record record2) {
+    public int compareRecords(Record b) {
 
-        int attemptsComparison = record1.getAttempts() - record2.getAttempts();
+        int compareAttempts = this.getAttempts() - b.getAttempts();
 
-        if (attemptsComparison == 0) {
+        if (compareAttempts == 0) {
 
-            int timeComparison = record1.getGameTime() - record2.getGameTime();
+            int compareTime = this.getGameTime() - b.getGameTime();
 
-            if (timeComparison == 0) {
+            if (compareTime == 0) {
 
-                return 0;
+                return 0; // Si coinciden tanto en intentos como en tiempo, decido dejar primero el registro mas antiguo (mantener el orden igual).
 
             } else {
 
-                return timeComparison;
+                return compareTime;
 
             }
 
         } else {
 
-            return attemptsComparison;
+            return compareAttempts;
 
         }
 

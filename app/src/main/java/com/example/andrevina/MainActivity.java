@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.widget.Button;
@@ -21,9 +22,11 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.stream.Stream;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -38,9 +41,9 @@ import javax.xml.transform.stream.StreamResult;
 
 public class MainActivity extends AppCompatActivity {
 
-    final File filesDir = new File ("/data/user/0/com.example.pr21_capturaimatges/files");
-    final File photoDir = new File ("/data/user/0/com.example.pr21_capturaimatges/files/photos");
-    final File rankingFile = new File ("/data/user/0/com.example.pr21_capturaimatges/files/ranking.xml");
+    final File filesDir = new File ("/data/user/0/com.example.andrevina/files");
+    final File photoDir = new File ("/data/user/0/com.example.andrevina/files/photos");
+    final File rankingFile = new File ("/data/user/0/com.example.andrevina/files/ranking.xml");
     final String photoExt = ".jpeg";
 
     File photoFile;
@@ -52,11 +55,12 @@ public class MainActivity extends AppCompatActivity {
     Transformer transformer;
 
     ArrayList<Record> recordsList = new ArrayList<Record>();
+    Record newRecord;
 
     int randNum;
 
-    int attempts;
     String nickname;
+    int attempts;
     int gameTime;
     Bitmap photoBitmap;
     String timeInfo;
@@ -64,10 +68,7 @@ public class MainActivity extends AppCompatActivity {
     long startTime;
     long endTime;
 
-    Toast toast;
-    Context toastContext;
     CharSequence toastText;
-    int toastDuration;
 
     AlertDialog.Builder adb;
     AlertDialog adRanking;
@@ -89,17 +90,16 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        toastContext = getApplicationContext();
-        toastDuration = Toast.LENGTH_SHORT;
-
         final EditText editTextNumber = findViewById(R.id.editTextNumber);
         final Button buttonCheck = findViewById(R.id.buttonCheck);
+        final Button buttonRanking = findViewById(R.id.buttonRanking);
 
         try {
 
             checkDir();
             checkXML();
             readRankingXML();
+            printRecordsList();
 
         } catch (IOException e) {
 
@@ -155,15 +155,23 @@ public class MainActivity extends AppCompatActivity {
 
                 editTextNumber.setText("");
 
-                toast = Toast.makeText(toastContext, toastText, toastDuration);
-                toast.show();
+                Toast.makeText(getApplicationContext(), toastText, Toast.LENGTH_SHORT).show();
+
+            }
+        });
+
+        buttonRanking.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                openRanking();
 
             }
         });
 
     }
 
-    public void checkDir() throws IOException {
+    public void checkDir() throws IOException { // Comprobamos si existen los directorios necesarios para el almacenamiento y si no existen los creamos.
 
         if (!filesDir.exists()) {
 
@@ -183,14 +191,15 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void checkXML() throws IOException {
+    public void checkXML() throws IOException { // Comprobamos si ya hay un archivo de ranking creado, en caso de no haberlo creamos uno y le añadimos la etiqueta root "ranking".
 
         try {
 
+            dbf = DocumentBuilderFactory.newInstance();
+            db = dbf.newDocumentBuilder();
+
             if (!rankingFile.exists()) {
 
-                dbf = DocumentBuilderFactory.newInstance();
-                db = dbf.newDocumentBuilder();
                 domi = db.getDOMImplementation();
 
                 rankingDocument = domi.createDocument(null, "ranking", null);
@@ -212,33 +221,83 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void readRankingXML() {
+    public void readRankingXML() { // Parseamos el XML del ranking para leerlo y construir el ArrayList de records.
+
+        recordsList.clear();
 
         try {
 
             rankingDocument = db.parse(rankingFile);
 
-            NodeList recordsList = rankingDocument.getElementsByTagName("record");
+            NodeList recordsNodeList = rankingDocument.getElementsByTagName("record"); // Obtenemos una lista de todos los "record" almacenados.
 
-            for (int i = 0; i < recordsList.getLength(); i++) {
+            for (int i = 0; i < recordsNodeList.getLength(); i++) {
 
-                Node recordNode = recordsList.item(i);
+                Node recordNode = recordsNodeList.item(i);
 
-                NodeList recordDataNodes = recordNode.getChildNodes();
+                NodeList recordDataNodesList = recordNode.getChildNodes(); // Por cada "record" obtenemos sus hijos.
 
-                for (int j = 0; j < recordDataNodes.getLength(); j++) {
+                for (int j = 0; j < recordDataNodesList.getLength(); j++) {
 
-                    Node recordDataNode = recordDataNodes.item(j);
+                    Node recordDataNode = recordDataNodesList.item(j);
 
-                    System.out.println("Propiedad: " + recordDataNode.getNodeName() + " Valor: " + recordDataNode.getTextContent());
+                    switch (recordDataNode.getNodeName()) { // Hacemos un switch para manejar cada caso de los posibles (cada elemento).
+
+                        case "nickname":
+
+                            nickname = recordDataNode.getTextContent();
+                            break;
+
+                        case "attempts":
+
+                            attempts = Integer.valueOf(recordDataNode.getTextContent());
+                            break;
+
+                        case "gametime":
+
+                            gameTime = Integer.valueOf(recordDataNode.getTextContent());
+                            break;
+
+                        case "photobitmap":
+
+                            photoFile = new File(recordDataNode.getTextContent());
+
+                            photoBitmap = BitmapFactory.decodeStream(new FileInputStream(photoFile));
+                            break;
+
+                        case "timeinfo":
+
+                            timeInfo = recordDataNode.getTextContent();
+                            break;
+
+                    }
 
                 }
+
+                recordsList.add(new Record(nickname, attempts, gameTime, photoBitmap, timeInfo));
+
             }
 
 
         } catch (Exception e) {
 
             e.printStackTrace();
+
+        }
+
+    }
+
+    public void printRecordsList() { // Esta funcion es simplemente para facilitar el saber que esta pasando en el programa leyendo la consola.
+
+
+        for (int i = 0; i < recordsList.size(); i++) {
+
+            System.out.println("Record " + (i+1));
+            System.out.println("Nickname: " + recordsList.get(i).getNickname());
+            System.out.println("Attempts: " + recordsList.get(i).getAttempts());
+            System.out.println("GameTime: " + recordsList.get(i).getGameTime());
+            System.out.println("PhotoURI: " + recordsList.get(i).getPhotoBitmap().toString());
+            System.out.println("TimeInfo: " + recordsList.get(i).getTimeInfo());
 
         }
 
@@ -302,16 +361,15 @@ public class MainActivity extends AppCompatActivity {
 
                     nickname = editTextNickname.getText().toString();
 
+                    editTextNickname.setText("");
+
                     adRanking.dismiss();
 
                     takePhoto();
 
                 } else { // Si el usuario no escribe ningun nombre, mostramos un toast informativo y mantenemos el dialogo abierto.
 
-                    toastText = "Introduce a name.";
-
-                    toast = Toast.makeText(toastContext, toastText, toastDuration);
-                    toast.show();
+                    Toast.makeText(getApplicationContext(), "Introduce a name.", Toast.LENGTH_SHORT).show();
 
                 }
 
@@ -349,11 +407,13 @@ public class MainActivity extends AppCompatActivity {
 
             savePhoto();
 
-            recordsList.add(new Record(nickname, attempts, gameTime, photoBitmap, timeInfo));
+            newRecord = new Record(nickname, attempts, gameTime, photoBitmap, timeInfo);
+
+            recordsList.add(getRightIndex(), newRecord); // Metemos el nuevo registro en la posicion correspondiente para mantener siempre la lista ordenada.
 
             writeRankingXML();
 
-            readRankingXML();
+            restart();
 
             openRanking();
 
@@ -386,11 +446,77 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void writeRankingXML() {
+    public int getRightIndex() { // Utilizamos esta funcion para obtener el indice de la posicion correspondiente al nuevo record en el ArrayList, de forma que no necesitamos ordenar la lista.
+
+        int infLimit = 0;
+        int supLimit = recordsList.size() - 1;
+        int indexSearch;
+
+        int infRecordCompare;
+        int midRecordCompare;
+        int supRecordCompare;
+
+        while (infLimit <= supLimit) {
+
+            indexSearch = (infLimit + supLimit) / 2;
+
+            if (indexSearch == 0 || indexSearch == recordsList.size()-1) {
+
+                return indexSearch;
+
+            }
+
+            midRecordCompare = recordCompare(indexSearch);
+
+            if (midRecordCompare == 0) {
+
+                return indexSearch++;
+
+            } else {
+
+                infRecordCompare = recordCompare(indexSearch-1);
+                supRecordCompare = recordCompare(indexSearch+1);
+
+            }
+
+            if (infRecordCompare >= 0 && supRecordCompare <= 0) {
+
+                return indexSearch;
+
+            } else if (infRecordCompare > 0) {
+
+                infLimit = indexSearch++;
+
+            } else if (supRecordCompare < 0) {
+
+                supLimit = indexSearch--;
+
+            }
+
+        }
+
+        return 0;
+
+    }
+
+    public int recordCompare(int indexSearch) { // Con esta funcion comparamos el ultimo Record con un Record de la lista. Nos devuelve < 0 si deberia estar posicionado antes y > 0 si deberia estar posicionado despues.
+
+        return newRecord.compareRecords(recordsList.get(indexSearch));
+
+    }
+
+    public void writeRankingXML() { // Reescribimos el XML ya ordenado, de forma que solo tengamos que definir la posicion del ultimo record introducido, en lugar de reordenar la lista cada vez que la generemos.
+
+        rankingFile.delete();
+
+        domi = db.getDOMImplementation();
+
+        rankingDocument = domi.createDocument(null, "ranking", null); // Generamos la etiqueta root "ranking"
+        rankingDocument.setXmlVersion("1.0");
 
         try {
 
-            for (int i = 0; i < recordsList.size(); i++) {
+            for (int i = 0; i < recordsList.size(); i++) { // Por cada objeto "Record", creamos los elementos con sus valores correspondientes.
 
                 Element elementRecord = rankingDocument.createElement("record");
 
@@ -435,9 +561,7 @@ public class MainActivity extends AppCompatActivity {
 
             Transformer transformer = TransformerFactory.newInstance().newTransformer();
 
-            transformer.transform(source, result);
-
-
+            transformer.transform(source, result); // Creamos el XML ya actualizado.
 
         } catch (Exception e) {
 
@@ -447,21 +571,20 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void openRanking() { // Creamos un bundle en el que metemos toda la informacion necesaria para registrar en el ranking, y lanzamos el intent con el dentro.
+    public void openRanking() { // Comprobamos si hay alguna puntuacion guardada, en ese caso iniciamos la RankingActivity. Si no, notificamos al usuario.
 
-        Intent intent = new Intent(MainActivity.this, RankingActivity.class);
+        if (recordsList.size() > 0) {
 
-        Bundle extras = new Bundle();
+            Intent intent = new Intent(MainActivity.this, RankingActivity.class);
 
-        extras.putString("NICKNAME", nickname);
-        extras.putInt("ATTEMPTS", attempts);
-        extras.putInt("GAME_TIME", gameTime);
-        extras.putParcelable("PHOTO", photoBitmap);
-        extras.putString("TIME_INFO", timeInfo);
+            startActivity(intent);
 
-        intent.putExtras(extras);
+        } else {
 
-        startActivity(intent);
+            Toast.makeText(getApplicationContext(), "De momento no hay puntuaciones guardadas, prueba a guardar alguna.", Toast.LENGTH_LONG).show();
+
+        }
+
     }
 
 }

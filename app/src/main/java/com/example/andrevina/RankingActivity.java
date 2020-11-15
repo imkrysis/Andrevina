@@ -15,6 +15,9 @@ import java.util.ArrayList;
 
 public class RankingActivity extends AppCompatActivity {
 
+    final File photoDir = new File ("/data/user/0/com.example.andrevina/files/photos");
+    final File rankingFile = new File ("/data/user/0/com.example.andrevina/files/ranking.xml");
+
     ArrayList<Record> records = new ArrayList<Record>();
 
     String nickname;
@@ -23,7 +26,7 @@ public class RankingActivity extends AppCompatActivity {
     Bitmap photo;
     String timeInfo;
 
-    File recordsDir;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,9 +35,9 @@ public class RankingActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
 
-        Bundle extras = intent.getExtras();
-
-        getExtras(extras);
+//        Bundle extras = intent.getExtras();
+//
+//        getExtras(extras);
 
         checkFiles();
 
@@ -53,12 +56,6 @@ public class RankingActivity extends AppCompatActivity {
     }
 
     public void checkFiles() {
-
-        recordsDir = new File (getApplicationContext().getFilesDir(),"records");
-
-        if (!recordsDir.exists()) {
-            recordsDir.mkdir();
-        }
 
     }
 
