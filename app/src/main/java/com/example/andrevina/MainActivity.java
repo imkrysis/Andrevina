@@ -3,7 +3,6 @@ package com.example.andrevina;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -26,12 +25,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.stream.Stream;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
@@ -465,7 +461,7 @@ public class MainActivity extends AppCompatActivity {
 
             }
 
-            midRecordCompare = recordCompare(indexSearch); // Comparamos el nuevo record con el correspondiente del ArrayList.
+            midRecordCompare = newRecordCompare(indexSearch); // Comparamos el nuevo record con el correspondiente del ArrayList.
 
             if (midRecordCompare == 0) { // Si son iguales cogemos el indice y le añadimos uno para colocarlo justo despues.
 
@@ -473,8 +469,8 @@ public class MainActivity extends AppCompatActivity {
 
             } else { // Si no hemos encontrado el indice, necesitaremos comparar el nuevo Record con el siguiente y anterior, para saber en que mitad de la ArrayList hemos de colocarlo.
 
-                infRecordCompare = recordCompare(indexSearch-1);
-                supRecordCompare = recordCompare(indexSearch+1);
+                infRecordCompare = newRecordCompare(indexSearch-1);
+                supRecordCompare = newRecordCompare(indexSearch+1);
 
             }
 
@@ -498,7 +494,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public int recordCompare(int indexSearch) { // Con esta funcion comparamos el ultimo Record con un Record de la lista. Nos devuelve < 0 si deberia estar posicionado antes y > 0 si deberia estar posicionado despues.
+    public int newRecordCompare(int indexSearch) { // Con esta funcion comparamos el ultimo Record con un Record de la lista. Nos devuelve < 0 si deberia estar posicionado antes y > 0 si deberia estar posicionado despues.
 
         return newRecord.compareRecords(recordsList.get(indexSearch));
 

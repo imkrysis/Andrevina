@@ -2,8 +2,6 @@ package com.example.andrevina;
 
 import android.graphics.Bitmap;
 
-import java.util.Comparator;
-
 public class Record {
 
     String nickname;
