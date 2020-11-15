@@ -78,7 +78,6 @@ public class MainActivity extends AppCompatActivity {
     public void restart() { // Restablecemos las variables correspondientes para volver a iniciar la partida.
 
         randNum = (int) (Math.random() * 100 + 1);
-        randNum = 7;
         attempts = 0;
         startTime = System.currentTimeMillis(); // Guardamos la hora de inicio de la ronda.
         endTime = 0;
@@ -122,12 +121,12 @@ public class MainActivity extends AppCompatActivity {
                         if (userNum > randNum) {
                             attempts++;
 
-                            toastText = "The number is smaller than " + userNum + ". You have made " + attempts + " attempts.";
+                            toastText = "El número es menor que " + userNum + ". Llevas " + attempts + " intentos.";
 
                         } else if (userNum < randNum) {
                             attempts++;
 
-                            toastText = "The number is bigger than " + userNum + ". You have made " + attempts + " attempts.";
+                            toastText = "El número es mayor que " + userNum + ". Llevas " + attempts + " intentos.";
 
                         } else {
 
@@ -137,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
 
                             setGameTime();
 
-                            toastText = "You guessed the number, it was " + randNum + ". You needed " + attempts + " attempts and " + timeInfo + " minutes/seconds.";
+                            toastText = "Adivinaste el número. Era " + randNum + ". Necesitaste " + attempts + " intentos y " + timeInfo + " minutos/segundos.";
 
                             showRankingDialog(); // Mostramos el dialogo de ranking, para que el usuario pueda registrar su puntuacion.
 
@@ -145,12 +144,12 @@ public class MainActivity extends AppCompatActivity {
 
                     } else {
 
-                        toastText = "Introduce a number between 1 and 100, both included.";
+                        toastText = "Introduce un numero entre 1 y 100, ambos incluídos.";
                     }
 
                 } else {
 
-                    toastText = "Introduce a number.";
+                    toastText = "Introduce un número...";
                 }
 
                 editTextNumber.setText("");
@@ -274,7 +273,7 @@ public class MainActivity extends AppCompatActivity {
 
                 }
 
-                recordsList.add(new Record(nickname, attempts, gameTime, photoBitmap, timeInfo));
+                recordsList.add(new Record(nickname, attempts, gameTime, photoBitmap, timeInfo)); // Despues de obtener la informacion, creamos el objeto y lo añadimos al ArrayList.
 
             }
 
@@ -332,14 +331,14 @@ public class MainActivity extends AppCompatActivity {
 
         adb = new AlertDialog.Builder(this);
 
-        adb.setTitle("Do you want to enter your score?");
-        adb.setMessage("Introduce your nickname");
+        adb.setTitle("¿Quieres guardar tu puntuación?");
+        adb.setMessage("Introduce tu nickname.");
 
         editTextNickname = new EditText(this);
 
         adb.setView(editTextNickname);
 
-        adb.setPositiveButton("Yes", null);
+        adb.setPositiveButton("Sí", null);
         adb.setNegativeButton("No", null);
 
         adRanking = adb.create();
@@ -369,7 +368,7 @@ public class MainActivity extends AppCompatActivity {
 
                 } else { // Si el usuario no escribe ningun nombre, mostramos un toast informativo y mantenemos el dialogo abierto.
 
-                    Toast.makeText(getApplicationContext(), "Introduce a name.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Introduce un nombre...", Toast.LENGTH_SHORT).show();
 
                 }
 
@@ -407,7 +406,7 @@ public class MainActivity extends AppCompatActivity {
 
             savePhoto();
 
-            newRecord = new Record(nickname, attempts, gameTime, photoBitmap, timeInfo);
+            newRecord = new Record(nickname, attempts, gameTime, photoBitmap, timeInfo); // Creamos un objeto Record auxiliar con los datos del nuevo registro, utilizaremos este objeto para determinar su posicion correcta.
 
             recordsList.add(getRightIndex(), newRecord); // Metemos el nuevo registro en la posicion correspondiente para mantener siempre la lista ordenada.
 
@@ -446,7 +445,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public int getRightIndex() { // Utilizamos esta funcion para obtener el indice de la posicion correspondiente al nuevo record en el ArrayList, de forma que no necesitamos ordenar la lista.
+    public int getRightIndex() { // Utilizamos esta funcion para obtener el indice de la posicion final correspondiente al nuevo record en el ArrayList, de forma que la lista quede ordenada.
 
         int infLimit = 0;
         int supLimit = recordsList.size() - 1;
@@ -460,34 +459,34 @@ public class MainActivity extends AppCompatActivity {
 
             indexSearch = (infLimit + supLimit) / 2;
 
-            if (indexSearch == 0 || indexSearch == recordsList.size()-1) {
+            if (indexSearch == 0 || indexSearch == recordsList.size()-1) { // Si el indice a comparar es uno de los 2 limites, significa que el nuevo Record ha superado los demas filtros y debe ser esta su posicion.
 
                 return indexSearch;
 
             }
 
-            midRecordCompare = recordCompare(indexSearch);
+            midRecordCompare = recordCompare(indexSearch); // Comparamos el nuevo record con el correspondiente del ArrayList.
 
-            if (midRecordCompare == 0) {
+            if (midRecordCompare == 0) { // Si son iguales cogemos el indice y le añadimos uno para colocarlo justo despues.
 
                 return indexSearch++;
 
-            } else {
+            } else { // Si no hemos encontrado el indice, necesitaremos comparar el nuevo Record con el siguiente y anterior, para saber en que mitad de la ArrayList hemos de colocarlo.
 
                 infRecordCompare = recordCompare(indexSearch-1);
                 supRecordCompare = recordCompare(indexSearch+1);
 
             }
 
-            if (infRecordCompare >= 0 && supRecordCompare <= 0) {
+            if (infRecordCompare >= 0 && supRecordCompare <= 0) { // Si la comparacion con el Record anterior es superior o igual a 0, y la comparacion con el Record siguiente es inferior o igual a 0, significa que el nuevo Record debe estar entre los 2.
 
                 return indexSearch;
 
-            } else if (infRecordCompare > 0) {
+            } else if (infRecordCompare > 0) { // Si la comparacion con el Record anterior es superior a 0, significa que debemos buscar en la ultima mitad del ArrayList.
 
                 infLimit = indexSearch++;
 
-            } else if (supRecordCompare < 0) {
+            } else if (supRecordCompare < 0) { // Si la comparacion con el Record siguiente es inferior a 0, significa que debemos buscar en la primera mitad del ArrayList.
 
                 supLimit = indexSearch--;
 
