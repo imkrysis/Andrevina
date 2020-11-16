@@ -74,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
     public void restart() { // Restablecemos las variables correspondientes para volver a iniciar la partida.
 
         randNum = (int) (Math.random() * 100 + 1);
+        randNum = 7;
         attempts = 0;
         startTime = System.currentTimeMillis(); // Guardamos la hora de inicio de la ronda.
         endTime = 0;
@@ -455,17 +456,35 @@ public class MainActivity extends AppCompatActivity {
 
             indexSearch = (infLimit + supLimit) / 2;
 
-            if (indexSearch == 0 || indexSearch == recordsList.size()-1) { // Si el indice a comparar es uno de los 2 limites, significa que el nuevo Record ha superado los demas filtros y debe ser esta su posicion.
+            midRecordCompare = newRecordCompare(indexSearch); // Comparamos el nuevo record con el correspondiente del ArrayList.
+
+            if (recordsList.size() <= 2) {
+
+                if (midRecordCompare > 0) {
+
+                    return recordsList.size();
+
+                }
 
                 return indexSearch;
 
             }
 
-            midRecordCompare = newRecordCompare(indexSearch); // Comparamos el nuevo record con el correspondiente del ArrayList.
+            if (indexSearch == 0 || indexSearch == recordsList.size()-1) { // Si el indice a comparar es uno de los 2 limites, significa que el nuevo Record ha superado los demas filtros y debe ser esta su posicion.
+
+                if (midRecordCompare > 0) {
+
+                    return indexSearch + 1;
+
+                }
+
+                return indexSearch;
+
+            }
 
             if (midRecordCompare == 0) { // Si son iguales cogemos el indice y le añadimos uno para colocarlo justo despues.
 
-                return indexSearch++;
+                return indexSearch + 1;
 
             } else { // Si no hemos encontrado el indice, necesitaremos comparar el nuevo Record con el siguiente y anterior, para saber en que mitad de la ArrayList hemos de colocarlo.
 
@@ -476,15 +495,21 @@ public class MainActivity extends AppCompatActivity {
 
             if (infRecordCompare >= 0 && supRecordCompare <= 0) { // Si la comparacion con el Record anterior es superior o igual a 0, y la comparacion con el Record siguiente es inferior o igual a 0, significa que el nuevo Record debe estar entre los 2.
 
-                return indexSearch;
+                if (midRecordCompare < 0) {
+
+                    return  indexSearch;
+
+                }
+
+                return indexSearch + 1;
 
             } else if (infRecordCompare > 0) { // Si la comparacion con el Record anterior es superior a 0, significa que debemos buscar en la ultima mitad del ArrayList.
 
-                infLimit = indexSearch++;
+                infLimit = indexSearch + 1;
 
             } else if (supRecordCompare < 0) { // Si la comparacion con el Record siguiente es inferior a 0, significa que debemos buscar en la primera mitad del ArrayList.
 
-                supLimit = indexSearch--;
+                supLimit = indexSearch - 1;
 
             }
 
