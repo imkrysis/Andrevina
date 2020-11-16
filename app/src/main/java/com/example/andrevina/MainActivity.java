@@ -74,7 +74,6 @@ public class MainActivity extends AppCompatActivity {
     public void restart() { // Restablecemos las variables correspondientes para volver a iniciar la partida.
 
         randNum = (int) (Math.random() * 100 + 1);
-        randNum = 7;
         attempts = 0;
         startTime = System.currentTimeMillis(); // Guardamos la hora de inicio de la ronda.
         endTime = 0;
@@ -95,7 +94,6 @@ public class MainActivity extends AppCompatActivity {
             checkDir();
             checkXML();
             readRankingXML();
-            printRecordsList();
 
         } catch (IOException e) {
 
